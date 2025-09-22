@@ -5,66 +5,17 @@ import 'package:geolocator/geolocator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await checkAndRequestPermissions();
+  await initializeService();
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: LocationScreen(),
-    );
-  }
-}
-
-class LocationScreen extends StatefulWidget {
-  const LocationScreen({super.key});
-
-  @override
-  State<LocationScreen> createState() => _LocationScreenState();
-}
-
-class _LocationScreenState extends State<LocationScreen> with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    initializeLocationService();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      checkAndRequestPermissions();
-    }
-  }
-
-  Future<void> initializeLocationService() async {
-    await checkAndRequestPermissions();
-    await initializeService();
-  }
-
-  Future<void> checkAndRequestPermissions() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission != LocationPermission.always) {
-      await Geolocator.openAppSettings();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SizedBox.shrink(),
-    );
+Future<void> checkAndRequestPermissions() async {
+  LocationPermission permission = await Geolocator.checkPermission();
+  if (permission != LocationPermission.always) {
+    await Geolocator.openAppSettings();
   }
 }
 
@@ -84,6 +35,7 @@ Future<void> initializeService() async {
       onBackground: onIosBackground,
     ),
   );
+
   await service.startService();
 }
 
@@ -110,7 +62,29 @@ void onStart(ServiceInstance service) async {
       print("LAT: ${position.latitude}, LNG: ${position.longitude}");
       print("Time: ${DateTime.now()}");
     } catch (e) {
-      // Silent error handling
     }
   });
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LocationScreen(),
+    );
+  }
+}
+
+class LocationScreen extends StatelessWidget {
+  const LocationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SizedBox.shrink(),
+    );
+  }
 }
